@@ -4,7 +4,10 @@ from telegram.ext import (
     ApplicationBuilder, 
     CommandHandler, 
     CallbackQueryHandler, 
-    ContextTypes
+    MessageHandler, 
+    filters, 
+    ContextTypes, 
+    ConversationHandler
 )
 from dotenv import load_dotenv
 import os
@@ -18,38 +21,81 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+# Определение этапов в разговоре
+USERNAME, PASSWORD = range(2)
+
+# Массив (или словарь) с валидными пользователями и паролями
+USUAL_USERS = {
+    "user1": "password",
+    "user2": "password"
+}
+
+EXTRA_USERS = {
+    "user3": "password",
+    "user4": "password"
+}
+
+VALID_USERS = {
+    "user5": "password",
+    "user6": "password"
+}
+
 # Функция для команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Создаем две кнопки
-    keyboard = [
-        [
-            InlineKeyboardButton("Кнопка 1", callback_data='1'),
-            InlineKeyboardButton("Кнопка 2", callback_data='2')
-        ]
-    ]
+    await update.message.reply_text("Введите имя пользователя:")
+    return USERNAME
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+# Получение имени пользователя
+async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['username'] = update.message.text
+    await update.message.reply_text("Введите пароль:")
+    return PASSWORD
+
+# Получение пароля и проверка
+async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    username = context.user_data.get('username')
+    password = update.message.text
+
+    # Проверяем имя пользователя и пароль
+    if VALID_USERS.get(username) == password:
+        # Удаляем предыдущее сообщение
+        await update.message.delete()
+        await update.message.reply_text(f"Добро пожаловать, {username}!")
+        return ConversationHandler.END
     
-    # Отправляем сообщение с кнопками
-    await update.message.reply_text('Выберите одну из кнопок:', reply_markup=reply_markup)
+    if EXTRA_USERS.get(username) == password:
+        await update.message.reply_text(f"Добро пожаловать, {username}!")
+        return ConversationHandler.END
+    
+    if USUAL_USERS.get(username) == password:
+        await update.message.reply_text(f"Добро пожаловать, {username}!")
+        return ConversationHandler.END
+    
+    else:
+        await update.message.reply_text("Неверное имя пользователя или пароль. Попробуйте снова.")
+        return ConversationHandler.END
 
-# Обработка нажатия на кнопки
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    # Выводим сообщение о выбранной кнопке
-    await query.edit_message_text(text=f"Вы выбрали: {query.data}")
+# Обработчик отмены
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Процесс отменен.')
+    return ConversationHandler.END
 
 if __name__ == '__main__':
     # Создаем приложение с токеном из переменных окружения
     application = ApplicationBuilder().token(os.getenv('TOKEN')).build()
 
-    # Обработчик для команды /start
-    application.add_handler(CommandHandler('start', start))
-    
-    # Обработчик для нажатий на кнопки
-    application.add_handler(CallbackQueryHandler(button))
+    # Создаем ConversationHandler для взаимодействия с пользователем
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_username)],
+            PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_password)],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    # Добавляем ConversationHandler для обработки ввода имени и пароля
+    application.add_handler(conv_handler)
 
     # Запуск бота
     application.run_polling()
