@@ -1,5 +1,7 @@
-TOKEN = '7836118932:AAEIJazEzXDY1iWRiuQ7MTTHwEh8wAjPmmE'
-
+f = open('token.txt', "r")
+TOKEN = f.read().strip()
+f.close()
+    
 import logging
 import booking
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
