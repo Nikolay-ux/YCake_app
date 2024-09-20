@@ -46,7 +46,7 @@ async def handle_private_booking(update: Update, context: ContextTypes.DEFAULT_T
     for i in range(rooms):
         keyboard.append([InlineKeyboardButton(f'Room {i+1}', callback_data=f'private_room_{i+1}')]) 
     keyboard.append([InlineKeyboardButton("Back", callback_data="back")])  
-    reply_markup = InlineKeyboardMarkup(keyboard)        
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.callback_query.edit_message_text("Choose a room:", reply_markup=reply_markup)    
     
 async def handle_public_booking(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
