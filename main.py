@@ -63,7 +63,9 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         keyboard = []
         for i in range(rooms):
             keyboard.append([InlineKeyboardButton(f'Room {i+1}', callback_data=f'private_room_{i+1}')]) 
-        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])       
+        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])  
+        reply_markup = InlineKeyboardMarkup(keyboard)        
+        await query.edit_message_text("Choose a room:", reply_markup=reply_markup)     
     if query.data == "public":
         keyboard = []
         for i in range(areas):
@@ -97,12 +99,12 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
         keyboard = []
         for date in dates:
-            keyboard.append([InlineKeyboardButton(date, callback_data=f'public_area_{room_id}_{date}')])
+            keyboard.append([InlineKeyboardButton(date, callback_data=f'public_area_{area_id}_{date}')])
         keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
         reply_markup = InlineKeyboardMarkup(keyboard)        
         
         reply_markup = InlineKeyboardMarkup(keyboard)     
-        await query.edit_message_text(f"Area {room_id} selected. Please choose a day:", reply_markup=reply_markup)
+        await query.edit_message_text(f"Area {area_id} selected. Please choose a day:", reply_markup=reply_markup)
     # if query.data    
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
