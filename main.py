@@ -1,55 +1,58 @@
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (
-    ApplicationBuilder, 
-    CommandHandler, 
-    CallbackQueryHandler, 
-    ContextTypes
-)
-from dotenv import load_dotenv
-import os
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
+from place import PlaceManager
+from utils import create_buttons
+from datetime import timedelta
 
-# Загружаем переменные окружения из .env файла
-load_dotenv()
-
-# Логирование
+# Настройка логгера
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
+logger = logging.getLogger(__name__)
 
-# Функция для команды /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Создаем две кнопки
+TOKEN = 'YOUR_BOT_TOKEN'
+rooms = 5
+manager = PlaceManager(rooms)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
-        [
-            InlineKeyboardButton("Кнопка 1", callback_data='1'),
-            InlineKeyboardButton("Кнопка 2", callback_data='2')
-        ]
-    ]
-
+        [InlineKeyboardButton("Book a room", callback_data="1"), InlineKeyboardButton("Option 2", callback_data="2")],
+        [InlineKeyboardButton("Options", callback_data="3")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    # Отправляем сообщение с кнопками
-    await update.message.reply_text('Выберите одну из кнопок:', reply_markup=reply_markup)
 
-# Обработка нажатия на кнопки
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
 
-    # Выводим сообщение о выбранной кнопке
-    await query.edit_message_text(text=f"Вы выбрали: {query.data}")
+    if query.data == "1":
+        keyboard = [
+            [InlineKeyboardButton("Private meeting", callback_data="private")],
+            [InlineKeyboardButton("Public event", callback_data="public")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Please choose:", reply_markup=reply_markup)
+        
+    if query.data == "private":
+        keyboard = []
+        for i in range(rooms):
+            keyboard.append([InlineKeyboardButton(f'Room {i+1}', callback_data=f'room_{i+1}')])        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Choose a room:", reply_markup=reply_markup)
 
-if __name__ == '__main__':
-    # Создаем приложение с токеном из переменных окружения
-    application = ApplicationBuilder().token(os.getenv('TOKEN')).build()
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Use /start to test this bot.")
 
-    # Обработчик для команды /start
-    application.add_handler(CommandHandler('start', start))
-    
-    # Обработчик для нажатий на кнопки
-    application.add_handler(CallbackQueryHandler(button))
+def main() -> None:
+    application = Application.builder().token(TOKEN).build()
 
-    # Запуск бота
-    application.run_polling()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(buttons))
+    application.add_handler(CommandHandler("help", help_command))
+
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+if __name__ == "__main__":
+    main()
