@@ -4,6 +4,7 @@ f.close()
     
 import logging
 import booking
+import re
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 from datetime import datetime, timedelta
@@ -15,9 +16,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-rooms = 5
 areas = 3
-PlaceManager = booking.PlaceManager(rooms)
+PlaceManager = booking.PlaceManager()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
@@ -26,9 +26,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text("Please choose:", reply_markup=reply_markup)
-
-# async def private_meeting_creation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-   
+       
 
 async def handle_back_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [[InlineKeyboardButton("Book a room", callback_data="booking")], [InlineKeyboardButton("Options", callback_data="3")]]
@@ -43,7 +41,7 @@ async def handle_book_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def handle_private_booking(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = []
-    for i in range(rooms):
+    for i in range(PlaceManager.num_spots()):
         keyboard.append([InlineKeyboardButton(f'Room {i+1}', callback_data=f'private_room_{i+1}')]) 
     keyboard.append([InlineKeyboardButton("Back", callback_data="back")])  
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -61,7 +59,7 @@ async def handle_private_booking_room(update: Update, context: ContextTypes.DEFA
     dates = []
     current_date = datetime.now()
     for i in range(7):
-        dates.append(current_date.strftime("%d.%m"))
+        dates.append(current_date.strftime("%Y-%m-%d"))
         current_date += timedelta(days=1)
     keyboard = []
     for date in dates:
@@ -70,6 +68,17 @@ async def handle_private_booking_room(update: Update, context: ContextTypes.DEFA
     reply_markup = InlineKeyboardMarkup(keyboard)        
         
     await update.callback_query.edit_message_text(f"Room {room_id} selected. Please choose a day:", reply_markup=reply_markup)
+    
+async def handle_private_booking_room_date(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date) -> None:
+    slots = PlaceManager.check_spot_availability(room_id, date)
+    keyboard = []
+    for slot in slots:
+        keyboard.append([InlineKeyboardButton(slot, callback_data=f'private_room_{room_id}_{date}_{slot}')]) 
+    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.callback_query.edit_message_text(f"Room {room_id} selected. Please choose a day:", reply_markup=reply_markup)       
+
 
 async def handle_public_booking_room(update: Update, context: ContextTypes.DEFAULT_TYPE, area_id) -> None:
     dates = []
@@ -103,10 +112,17 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
  
     if query.data == "public":
         await handle_public_booking(update, context)
+        
+    # query.data.startswith("private_room_%d_"):
+    if re.match(r'^private_room_\d+_', query.data):
+        room_id = int(query.data.split("_")[-2])
+        date = query.data.split("_")[-1]
+        await handle_private_booking_room_date(update, context, room_id, date)
        
     if query.data.startswith("private_room_"):
-        room_id = int(query.data.split("_")[-1])        
+        room_id = query.data.split("_")[-1]        
         await handle_private_booking_room(update, context, room_id)
+    
             
     if query.data.startswith("public_area_"):
         area_id = int(query.data.split("_")[-1])        
