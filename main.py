@@ -72,7 +72,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             keyboard.append([InlineKeyboardButton(f'Area {i+1}', callback_data=f'public_area_{i+1}')]) 
         keyboard.append([InlineKeyboardButton("Back", callback_data="back")])   
         reply_markup = InlineKeyboardMarkup(keyboard)        
-        await query.edit_message_text("Choose a room:", reply_markup=reply_markup)
+        await query.edit_message_text("Choose an Area:", reply_markup=reply_markup)
     if query.data.startswith("private_room_"):
         room_id = int(query.data.split("_")[-1])        
         dates = []
