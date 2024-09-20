@@ -16,6 +16,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 rooms = 5
+areas = 3
 PlaceManager = booking.PlaceManager(rooms)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -63,7 +64,11 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         for i in range(rooms):
             keyboard.append([InlineKeyboardButton(f'Room {i+1}', callback_data=f'private_room_{i+1}')]) 
         keyboard.append([InlineKeyboardButton("Back", callback_data="back")])       
-        
+    if query.data == "public":
+        keyboard = []
+        for i in range(areas):
+            keyboard.append([InlineKeyboardButton(f'Area {i+1}', callback_data=f'public_area_{i+1}')]) 
+        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])   
         reply_markup = InlineKeyboardMarkup(keyboard)        
         await query.edit_message_text("Choose a room:", reply_markup=reply_markup)
     if query.data.startswith("private_room_"):
@@ -82,6 +87,22 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
         reply_markup = InlineKeyboardMarkup(keyboard)     
         await query.edit_message_text(f"Room {room_id} selected. Please choose a day:", reply_markup=reply_markup)
+    if query.data.startswith("public_area_"):
+        area_id = int(query.data.split("_")[-1])        
+        dates = []
+        current_date = datetime.now()
+        for i in range(7):
+            dates.append(current_date.strftime("%d.%m"))
+            current_date += timedelta(days=1)
+            
+        keyboard = []
+        for date in dates:
+            keyboard.append([InlineKeyboardButton(date, callback_data=f'public_area_{room_id}_{date}')])
+        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+        reply_markup = InlineKeyboardMarkup(keyboard)        
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)     
+        await query.edit_message_text(f"Area {room_id} selected. Please choose a day:", reply_markup=reply_markup)
     # if query.data    
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
