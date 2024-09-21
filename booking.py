@@ -47,7 +47,7 @@ class PlaceManager:
     def num_spots(self):
         return len(self.spots)
     
-    def get_cities():        
+    def get_cities(self):        
         # Подключение к базе данных
         conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
         cursor = conn.cursor()
@@ -66,8 +66,6 @@ class PlaceManager:
 
         for row in results:
             cities.append(row[0])  # Добавляем город в массив
-            print(f"Город: {row[0]}, Комнаты: {row[1]}")
-
         # Закрытие соединения
         return cities
     
