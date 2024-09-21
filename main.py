@@ -32,16 +32,13 @@ PM = booking.PlaceManager()
 
 USERNAME, PASSWORD = range(2)
 
-# Подключение к базе данных SQLite
 def db_connect():
     return sqlite3.connect('users.db')
 
-# Функция для проверки пользователя и пароля
 def check_user_in_db(username, password):
     conn = db_connect()
     cursor = conn.cursor()
 
-    # SQL запрос для проверки логина и пароля
     cursor.execute('SELECT * FROM tags WHERE tg_mail = ? AND password = ?', (username, password))
     result = cursor.fetchone()
 
@@ -49,35 +46,29 @@ def check_user_in_db(username, password):
     
     return result is not None
 
-# Функция для команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Введите имя пользователя:")
     return USERNAME
 
-# Получение имени пользователя
 async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['username'] = update.message.text
     await update.message.reply_text("Введите пароль:")
     return PASSWORD
 
-# Получение пароля и проверка через базу данных
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = context.user_data.get('username')
     password = update.message.text
 
-    # Проверка логина и пароля через базу данных
     if check_user_in_db(username, password):
         # Удаляем предыдущее сообщение
         await update.message.delete()
 
-        # Создаем клавиатуру с кнопками
         keyboard = [
             [InlineKeyboardButton("Book a room", callback_data="booking")],
             [InlineKeyboardButton("Options", callback_data="options")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        # Отправляем приветствие и клавиатуру
         await update.message.reply_text(f"Добро пожаловать, {username}!")
         await update.message.reply_text("Please choose:", reply_markup=reply_markup)
 
@@ -90,7 +81,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Процесс отменен.')
     return ConversationHandler.END
        
-
 async def handle_back_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [[InlineKeyboardButton("Book a room", callback_data="booking")], [InlineKeyboardButton("Options", callback_data="3")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -146,7 +136,7 @@ async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_T
     index = slots.index(slot_start)
     slots = slots[index + 1:min(index + 7, len(slots))]
     for i in range(0, len(slots), 3):
-        row = [InlineKeyboardButton(slot, callback_data=f'booked_{room_id}_{date}_{slot}') for slot in slots[i:i+3]]
+        row = [InlineKeyboardButton(slot, callback_data=f'booked_{room_id}_{date}_{slot_start}_{slot}') for slot in slots[i:i+3]]
         keyboard.append(row)
 
     keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
@@ -154,15 +144,14 @@ async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_T
     
     await update.callback_query.edit_message_text(f"start time: {slot_start}, choose end time:", reply_markup=reply_markup)  
 
-
 async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, time_start, time_end) -> None:
     PM.book_spot(room_id, date, time_start, time_end)
+    keyboard = [[InlineKeyboardButton("Back", callback_data="back")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.callback_query.edit_message_text(f"You succesfully booked [room name] {time_start} - {time_end} at {date}!", reply_markup=reply_markup)  
     
-    
-    
-
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Parses the CallbackQuery and updates the message text."""
+    
     query = update.callback_query
     await query.answer()
 
@@ -193,15 +182,12 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await handle_confirm_booking(update, context, room_id, date, slot)
         
     if query.data.startswith('booked'):
-        slot = query.data.split("_")[-1]
-        date = query.data.split("_")[-2]
-        room_id = int(query.data.split("_")[-3])
-        await handle_set_booked(update, context, room_id, date, slot)
+        time_end = query.data.split("_")[-1]
+        time_start = query.data.split("_")[-2]
+        date = query.data.split("_")[-3]
+        room_id = int(query.data.split("_")[-4])
+        await handle_set_booked(update, context, room_id, date, time_start, time_end)
         
-        
-
-    # if query.data    
-
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Use /start to test this bot.")
 
@@ -221,12 +207,9 @@ def main() -> None:
 
     application.add_handler(CallbackQueryHandler(buttons))
 
-    # Добавляем ConversationHandler для обработки ввода имени и пароля
     application.add_handler(conv_handler)
 
-    # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
-
 
 if __name__ == "__main__":
     main()

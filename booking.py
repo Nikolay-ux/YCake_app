@@ -7,13 +7,13 @@ class Spot:
         self.schedule = {}  # Расписание занятости: {дата: [временные интервалы]}
     
     # Метод для бронирования временного интервала на указанную дату
-    def book(self, date, start_time, duration):
+    def book(self, date, time_start, duration):
         # Проверка на длительность бронирования (30 минут - 3 часа)
         if duration < timedelta(minutes=30) or duration > timedelta(hours=3):
             return f"Ошибка: Длительность бронирования должна быть от 30 минут до 3 часов."
         
         # Конвертируем строку даты в объект datetime
-        start_datetime = datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M")
+        start_datetime = datetime.strptime(f"{date} {time_start}", "%Y-%m-%d %H:%M")
         end_datetime = start_datetime + duration
         
         if date not in self.schedule:
@@ -27,7 +27,7 @@ class Spot:
         
         # Добавляем бронирование (в виде временного интервала)
         self.schedule[date].append((start_datetime, end_datetime))
-        return f"Место {self.spot_id} успешно забронировано с {start_time} на {duration}."
+        return f"Место {self.spot_id} успешно забронировано с {time_start} на {duration}."
 
 
 # Управление массивом мест
@@ -98,13 +98,23 @@ class PlaceManager:
 
     
     # Бронирование конкретного места
-    def book_spot(self, room_id, date, start_time, duration):
+    def book_spot(self, room_id, date, time_start, time_end):
+
+        date_dt = datetime.strptime(date, "%Y-%m-%d")
+        dt_time_start = datetime.strptime(time_start, "%H.%M")
+        dt_time_end = datetime.strptime(time_end, "%H.%M")
+
+        # start_time_dt = start_time_dt.replace(year=date_dt.year, month=date_dt.month, day=date_dt.day)
+        # end_time_dt = end_time_dt.replace(year=date_dt.year, month=date_dt.month, day=date_dt.day)
         conn = sqlite3.connect('1.db')
         cursor = conn.cursor()
-        end_time = start_time + duration
-        for i in range(start_time, end_time, timedelta(minutes=30)):
-            cursor.execute('INSERT INTO time (, home_id, date, time)', (room_id, date, i))
+        dt_time = dt_time_start
+
+        while dt_time < dt_time_end:
+            cursor.execute('INSERT INTO time (home_id, date, time) VALUES (?, ?, ?)', (room_id, date_dt.strftime("%Y-%m-%d"), dt_time.strftime("%H:%M:%S")))
             conn.commit()
+            dt_time += timedelta(minutes=30)
+
         conn.close()
 
 
