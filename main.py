@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, \
+        ContextTypes, ConversationHandler, MessageHandler, filters
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
