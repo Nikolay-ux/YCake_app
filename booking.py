@@ -77,7 +77,7 @@ class PlaceManager:
         # Filter out the occupied slots
         available_slots = []
         for slot in all_slots:
-            slot_time = datetime.strptime(slot, '%H:%M').time()
+            slot_time = datetime.strptime(slot, '%H.%M').time()
             if slot_time not in occupied_slots_time:
                 available_slots.append(slot)
         # Print the available slots
