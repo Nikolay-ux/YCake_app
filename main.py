@@ -57,18 +57,21 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text
 
     # Проверяем имя пользователя и пароль
-    if VALID_USERS.get(username) == password:
+    if VALID_USERS.get(username) == password or EXTRA_USERS.get(username) == password or USUAL_USERS.get(username) == password:
         # Удаляем предыдущее сообщение
         await update.message.delete()
+
+        # Создаем клавиатуру с кнопками
+        keyboard = [
+            [InlineKeyboardButton("Book a room", callback_data="booking")],
+            [InlineKeyboardButton("Options", callback_data="options")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # Отправляем приветствие и клавиатуру
         await update.message.reply_text(f"Добро пожаловать, {username}!")
-        return ConversationHandler.END
-    
-    if EXTRA_USERS.get(username) == password:
-        await update.message.reply_text(f"Добро пожаловать, {username}!")
-        return ConversationHandler.END
-    
-    if USUAL_USERS.get(username) == password:
-        await update.message.reply_text(f"Добро пожаловать, {username}!")
+        await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+
         return ConversationHandler.END
     
     else:
