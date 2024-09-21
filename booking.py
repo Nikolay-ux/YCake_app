@@ -47,7 +47,7 @@ class PlaceManager:
     def num_spots(self):
         return len(self.spots)
     
-    def get_cities():        
+    def get_cities(self):        
         # Подключение к базе данных
         conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
         cursor = conn.cursor()
@@ -66,15 +66,36 @@ class PlaceManager:
 
         for row in results:
             cities.append(row[0])  # Добавляем город в массив
-            print(f"Город: {row[0]}, Комнаты: {row[1]}")
-
         # Закрытие соединения
         return cities
     
     def get_rooms(city):
-        
-        rooms = []
-        return rooms
+        # Подключение к базе данных
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        # SQL-запрос для получения комнат в заданном городе
+        query_name = """
+        SELECT room_name
+        FROM rooms
+        WHERE room_position = ?
+        """
+        query_id = """
+        SELECT ID
+        FROM rooms
+        WHERE room_position = ?
+        """
+        cursor.execute(query_name, (city,))
+        result_name = cursor.fetchall()
+        rooms = [row[0] for row in result_name]
+        cursor.execute(query_id, (city,))
+        result_id = cursor.fetchall()
+        ids = [row[0] for row in result_id]
+        result = rooms, ids
+        print(result)
+        conn.close()
+
+        return result
 
     
     # Бронирование конкретного места
