@@ -47,14 +47,67 @@ class PlaceManager:
     def num_spots(self):
         return len(self.spots)
     
-    # Бронирование конкретного места
-    def book_spot(self, spot_id, date, start_time, duration):
-        if spot_id < 1 or spot_id > len(self.spots):
-            return "Ошибка: Неверный номер места."
-        
-        spot = self.spots[spot_id - 1]
-        return spot.book(date, start_time, duration)
+    def get_cities(self):        
+        # Подключение к базе данных
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        # SQL-запрос
+        query = """
+        SELECT room_position, GROUP_CONCAT(room_name) AS rooms
+        FROM rooms
+        GROUP BY room_position;
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        conn.close()
+
+        cities = []
+
+        for row in results:
+            cities.append(row[0])  # Добавляем город в массив
+        # Закрытие соединения
+        return cities
     
+    def get_rooms(self, city):
+        # Подключение к базе данных
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        # SQL-запрос для получения комнат в заданном городе
+        query_name = """
+        SELECT room_name
+        FROM rooms
+        WHERE room_position = ?
+        """
+        query_id = """
+        SELECT ID
+        FROM rooms
+        WHERE room_position = ?
+        """
+        cursor.execute(query_name, (city,))
+        result_name = cursor.fetchall()
+        rooms = [row[0] for row in result_name]
+        cursor.execute(query_id, (city,))
+        result_id = cursor.fetchall()
+        ids = [row[0] for row in result_id]
+        result = rooms, ids
+        conn.close()
+
+        return result
+
+    
+    # Бронирование конкретного места
+    def book_spot(self, room_id, date, start_time, duration):
+        conn = sqlite3.connect('1.db')
+        cursor = conn.cursor()
+        end_time = start_time + duration
+        for i in range(start_time, end_time, timedelta(minutes=30)):
+            cursor.execute('INSERT INTO time (, home_id, date, time)', (room_id, date, i))
+            conn.commit()
+        conn.close()
+
+
     # Проверка занятости конкретного места на определенное время
     def check_spot_availability(self, spot_id, date):
         if spot_id < 1 or spot_id > len(self.spots):
@@ -64,21 +117,26 @@ class PlaceManager:
         cursor = conn.cursor()
 
         # Generate all possible time slots from 8:00 to 18:00
-        all_slots = [f'{str(hour).zfill(2)}:00' for hour in range(8, 18)]
+        all_slots = [f'{hour:02}.{minute:02}' for hour in range(8, 18) for minute in [0, 30]]
+
+        cursor.execute('SELECT time FROM time WHERE date = ? AND home_id = ? ORDER BY time', (date, spot_id,))
 
         # Query to get the occupied slots from the table
-        print (date)
-        cursor.execute('SELECT time FROM time WHERE date = ? ORDER BY time', (date,))
+        cursor.execute('SELECT time FROM time WHERE date = ? AND home_id = ? ORDER BY time', (date, spot_id,))
         occupied_slots = [slot[0] for slot in cursor.fetchall()]
-
+        occupied_slots = [slot[:5] for slot in occupied_slots]
+        occupied_slots_time = [datetime.strptime(slot, '%H:%M').time() for slot in occupied_slots]
         # Filter out the occupied slots
-        available_slots = [slot for slot in all_slots if slot not in occupied_slots]
-
-        # Print the available slots
-        print(available_slots)
+        available_slots = []
+        for slot in all_slots:
+            slot_time = datetime.strptime(slot, '%H.%M').time()
+            if slot_time not in occupied_slots_time:
+                available_slots.append(slot)
 
         # Close the connection
         conn.close()
+        return available_slots
+
        
     
     # Просмотр всех занятых мест на определённую дату
