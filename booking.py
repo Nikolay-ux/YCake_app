@@ -72,8 +72,23 @@ class PlaceManager:
         return cities
     
     def get_rooms(city):
-        
-        rooms = []
+        # Подключение к базе данных
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        # SQL-запрос для получения комнат в заданном городе
+        query = """
+        SELECT room_name
+        FROM rooms
+        WHERE room_position = ?
+        """
+        cursor.execute(query, (city,))
+        results = cursor.fetchall()
+        conn.close()
+
+        # Массив для хранения названий комнат
+        rooms = [row[0] for row in results]
+
         return rooms
 
     
