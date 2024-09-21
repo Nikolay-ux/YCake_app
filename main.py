@@ -84,7 +84,7 @@ async def handle_public_booking_room(update: Update, context: ContextTypes.DEFAU
     dates = []
     current_date = datetime.now()
     for i in range(7):
-        dates.append(current_date.strftime("%d.%m"))
+        dates.append(current_date.strftime("%Y-%m-%d"))
         current_date += timedelta(days=1)
         
     keyboard = []
@@ -95,6 +95,16 @@ async def handle_public_booking_room(update: Update, context: ContextTypes.DEFAU
     
     reply_markup = InlineKeyboardMarkup(keyboard)     
     await update.callback_query.edit_message_text(f"Area {area_id} selected. Please choose a day:", reply_markup=reply_markup)    
+
+async def handle_public_booking_room_date(update: Update, context: ContextTypes.DEFAULT_TYPE, area_id, date) -> None:
+    slots = PlaceManager.check_spot_availability(area_id, date)
+    keyboard = []
+    for slot in slots:
+        keyboard.append([InlineKeyboardButton(slot, callback_data=f'public_area_{area_id}_{date}_{slot}')]) 
+    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.callback_query.edit_message_text(f"Area {area_id} selected. Please choose a day:", reply_markup=reply_markup)  
 
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Parses the CallbackQuery and updates the message text."""
