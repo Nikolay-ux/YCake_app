@@ -42,7 +42,7 @@ def check_user_in_db(username, password):
     cursor = conn.cursor()
 
     # SQL запрос для проверки логина и пароля
-    cursor.execute('SELECT tg_mail AND password FROM tags WHERE tg_mail = ? AND password = ?', (username, password))
+    cursor.execute('SELECT * FROM tags WHERE tg_mail = ? AND password = ?', (username, password))
     result = cursor.fetchone()
 
     conn.close()
@@ -125,7 +125,7 @@ async def handle_book_room(update: Update, context: ContextTypes.DEFAULT_TYPE, r
         keyboard.append([InlineKeyboardButton(date, callback_data=f'd_room_{room_id}_{date}')])
     keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
-    await update.callback_query.edit_message_text(f"{room_name} selected. Please choose a day:", reply_markup=reply_markup)
+    await update.callback_query.edit_message_text(f"{room_name} selected. Please choose day:", reply_markup=reply_markup)
 
 async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date) -> None:
     slots = PM.check_spot_availability(room_id, date)
@@ -138,7 +138,27 @@ async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, r
     keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.callback_query.edit_message_text(f"{date} selected. Please choose a day:", reply_markup=reply_markup)       
+    await update.callback_query.edit_message_text(f"{date} selected. Please choose start time:", reply_markup=reply_markup)  
+    
+async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, slot_start) -> None:
+    slots = PM.check_spot_availability(room_id, date)
+    keyboard = []
+    index = slots.index(slot_start)
+    slots = slots[index + 1:min(index + 7, len(slots))]
+    for i in range(0, len(slots), 3):
+        row = [InlineKeyboardButton(slot, callback_data=f'booked_{room_id}_{date}_{slot}') for slot in slots[i:i+3]]
+        keyboard.append(row)
+
+    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.callback_query.edit_message_text(f"start time: {slot_start}, choose end time:", reply_markup=reply_markup)  
+
+
+async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, time_start, time_end) -> None:
+    PM.book_spot(room_id, date, time_start, time_end)
+    
+    
     
 
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -167,6 +187,16 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await handle_book_time(update, context, room_id, date) 
     
     if query.data.startswith('st_room'):
+        slot = query.data.split("_")[-1]
+        date = query.data.split("_")[-2]
+        room_id = int(query.data.split("_")[-3])
+        await handle_confirm_booking(update, context, room_id, date, slot)
+        
+    if query.data.startswith('booked'):
+        slot = query.data.split("_")[-1]
+        date = query.data.split("_")[-2]
+        room_id = int(query.data.split("_")[-3])
+        await handle_set_booked(update, context, room_id, date, slot)
         
         
 
