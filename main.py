@@ -2,24 +2,14 @@ f = open('token.txt', "r")
 TOKEN = f.read().strip()
 f.close()
     
-import logging
 import booking
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
+import users
+
 from datetime import datetime, timedelta
 
 import logging
-import os
-import sqlite3
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (
-    ApplicationBuilder, 
-    CommandHandler, 
-    MessageHandler, 
-    filters, 
-    ContextTypes, 
-    ConversationHandler
-)
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -32,19 +22,6 @@ PM = booking.PlaceManager()
 
 USERNAME, PASSWORD = range(2)
 
-def db_connect():
-    return sqlite3.connect('users.db')
-
-def check_user_in_db(username, password):
-    conn = db_connect()
-    cursor = conn.cursor()
-
-    cursor.execute('SELECT * FROM tags WHERE tg_mail = ? AND password = ?', (username, password))
-    result = cursor.fetchone()
-
-    conn.close()
-    
-    return result is not None
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Введите имя пользователя:")
@@ -59,8 +36,7 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = context.user_data.get('username')
     password = update.message.text
 
-    if check_user_in_db(username, password):
-        # Удаляем предыдущее сообщение
+    if users.check_user_in_db(username, password):
         await update.message.delete()
 
         keyboard = [
@@ -82,7 +58,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
        
 async def handle_back_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [[InlineKeyboardButton("Забронировать комнату", callback_data="booking")], [InlineKeyboardButton("Настройки [WIP]", callback_data="3")]]
+    keyboard = [[InlineKeyboardButton("Забронировать комнату", callback_data="booking")], [InlineKeyboardButton("Настройки [WIP]", callback_data="options")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.callback_query.edit_message_text("Выберите действие:", reply_markup=reply_markup)
     
@@ -94,6 +70,11 @@ async def handle_book_button(update: Update, context: ContextTypes.DEFAULT_TYPE)
     keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
     await update.callback_query.edit_message_text("Выберите город:", reply_markup=reply_markup)
+    
+async def handle_options_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    keyboard = [[InlineKeyboardButton("В начало", callback_data="back")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.callback_query.edit_message_text("Настройки:", reply_markup=reply_markup)
 
 async def handle_book_city(update: Update, context: ContextTypes.DEFAULT_TYPE, city) -> None:
     keyboard = []
@@ -157,6 +138,9 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if query.data == "back":
         await handle_back_button(update, context)
+        
+    if query.data == "options":
+        await handle_options_button(update, context)
 
     if query.data == "booking":
         await handle_book_button(update , context)
