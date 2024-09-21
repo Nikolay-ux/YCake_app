@@ -94,7 +94,8 @@ async def handle_book_room(update: Update, context: ContextTypes.DEFAULT_TYPE, r
         current_date += timedelta(days=1)
     keyboard = []
     for date in dates:
-        keyboard.append([InlineKeyboardButton(date, callback_data=f'd_room_{room_id}_{date}')])
+        obj = datetime.strptime(date, "%Y-%m-%d")
+        keyboard.append([InlineKeyboardButton(obj.strftime("%d.%m"), callback_data=f'd_room_{room_id}_{date}')])
     keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
     await update.callback_query.edit_message_text(f"{room_name} выбрана. Выберите день:", reply_markup=reply_markup)
@@ -110,7 +111,8 @@ async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, r
     keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.callback_query.edit_message_text(f"{date}   Выберите время начала:", reply_markup=reply_markup)  
+    obj = datetime.strptime(date, '%Y-%m-%d')
+    await update.callback_query.edit_message_text(f"{obj.strftime('%d.%m')}   Выберите время начала:", reply_markup=reply_markup)
     
 async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, slot_start) -> None:
     slots = PM.check_spot_availability(room_id, date)
@@ -131,7 +133,8 @@ async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     room_name = PM.get_room_name(room_id)
     keyboard = [[InlineKeyboardButton("В начало", callback_data="back")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату {room_name} с {time_start} до {time_end}, {date}!", reply_markup=reply_markup)  
+    obj = datetime.strptime(date, '%Y-%m-%d')
+    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату {room_name} с {time_start} до {time_end}, {obj.strftime('%d.%m')}!", reply_markup=reply_markup)  
     
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
