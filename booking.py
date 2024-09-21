@@ -99,13 +99,16 @@ class PlaceManager:
 
     
     # Бронирование конкретного места
-    def book_spot(self, spot_id, date, start_time, duration):
-        if spot_id < 1 or spot_id > len(self.spots):
-            return "Ошибка: Неверный номер места."
-        
-        spot = self.spots[spot_id - 1]
-        return spot.book(date, start_time, duration)
-    
+    def book_spot(self, room_id, date, start_time, duration):
+        conn = sqlite3.connect('1.db')
+        cursor = conn.cursor()
+        end_time = start_time + duration
+        for i in range(start_time, end_time, timedelta(minutes=30)):
+            cursor.execute('INSERT INTO time (, home_id, date, time)', (room_id, date, i))
+            conn.commit()
+        conn.close()
+
+
     # Проверка занятости конкретного места на определенное время
     def check_spot_availability(self, spot_id, date):
         if spot_id < 1 or spot_id > len(self.spots):
