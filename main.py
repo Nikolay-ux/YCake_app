@@ -94,7 +94,8 @@ async def handle_book_room(update: Update, context: ContextTypes.DEFAULT_TYPE, r
         current_date += timedelta(days=1)
     keyboard = []
     for date in dates:
-        keyboard.append([InlineKeyboardButton(date, callback_data=f'd_room_{room_id}_{date}')])
+        obj = datetime.strptime(date, "%Y-%m-%d")
+        keyboard.append([InlineKeyboardButton(obj.strftime("%d.%m"), callback_data=f'd_room_{room_id}_{date}')])
     keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
     await update.callback_query.edit_message_text(f"{room_name} выбрана. Выберите день:", reply_markup=reply_markup)
@@ -131,7 +132,8 @@ async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     PM.book_spot(room_id, date, time_start, time_end)
     keyboard = [[InlineKeyboardButton("В начало", callback_data="back")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату [room name] с {time_start} до {time_end}, {date}!", reply_markup=reply_markup)  
+    obj = datetime.strptime(date, '%Y-%m-%d')
+    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату [room name] с {time_start} до {time_end}, {obj.strftime('%d.%m')}!", reply_markup=reply_markup)  
     
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
