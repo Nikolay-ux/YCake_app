@@ -64,13 +64,13 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.delete()
 
         keyboard = [
-            [InlineKeyboardButton("Book a room", callback_data="booking")],
-            [InlineKeyboardButton("Options", callback_data="options")]
+            [InlineKeyboardButton("Забронировать комнату", callback_data="booking")],
+            [InlineKeyboardButton("Настройки [WIP]", callback_data="options")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(f"Добро пожаловать, {username}!")
-        await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+        await update.message.reply_text("Выберите действие:", reply_markup=reply_markup)
 
         return ConversationHandler.END
     else:
@@ -82,27 +82,27 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
        
 async def handle_back_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [[InlineKeyboardButton("Book a room", callback_data="booking")], [InlineKeyboardButton("Options", callback_data="3")]]
+    keyboard = [[InlineKeyboardButton("Забронировать комнату", callback_data="booking")], [InlineKeyboardButton("Настройки [WIP]", callback_data="3")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text("Please choose:", reply_markup=reply_markup)
+    await update.callback_query.edit_message_text("Выберите действие:", reply_markup=reply_markup)
     
 async def handle_book_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     cities = PM.get_cities()
     keyboard = []
     for city in cities:
         keyboard.append([InlineKeyboardButton(city, callback_data=f'city_{city}')])
-    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
-    await update.callback_query.edit_message_text("Please choose:", reply_markup=reply_markup)
+    await update.callback_query.edit_message_text("Выберите город:", reply_markup=reply_markup)
 
 async def handle_book_city(update: Update, context: ContextTypes.DEFAULT_TYPE, city) -> None:
     keyboard = []
     rooms = PM.get_rooms(city)
     for i in range(rooms[0].__len__()):
         keyboard.append([InlineKeyboardButton(f'{rooms[0][i]}', callback_data=f'room_{rooms[0][i]}_{rooms[1][i]}')]) 
-    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])  
+    keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text("Choose a room:", reply_markup=reply_markup)    
+    await update.callback_query.edit_message_text("Выберите комнату:", reply_markup=reply_markup)    
     
 async def handle_book_room(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, room_name) -> None:
     dates = []
@@ -113,9 +113,9 @@ async def handle_book_room(update: Update, context: ContextTypes.DEFAULT_TYPE, r
     keyboard = []
     for date in dates:
         keyboard.append([InlineKeyboardButton(date, callback_data=f'd_room_{room_id}_{date}')])
-    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)        
-    await update.callback_query.edit_message_text(f"{room_name} selected. Please choose day:", reply_markup=reply_markup)
+    await update.callback_query.edit_message_text(f"{room_name} выбрана. Выберите день:", reply_markup=reply_markup)
 
 async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date) -> None:
     slots = PM.check_spot_availability(room_id, date)
@@ -125,10 +125,10 @@ async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, r
         row = [InlineKeyboardButton(slot, callback_data=f'st_room_{room_id}_{date}_{slot}') for slot in slots[i:i+5]]
         keyboard.append(row)
 
-    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.callback_query.edit_message_text(f"{date} selected. Please choose start time:", reply_markup=reply_markup)  
+    await update.callback_query.edit_message_text(f"{date}   Выберите время начала:", reply_markup=reply_markup)  
     
 async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, slot_start) -> None:
     slots = PM.check_spot_availability(room_id, date)
@@ -139,16 +139,16 @@ async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_T
         row = [InlineKeyboardButton(slot, callback_data=f'booked_{room_id}_{date}_{slot_start}_{slot}') for slot in slots[i:i+3]]
         keyboard.append(row)
 
-    keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+    keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.callback_query.edit_message_text(f"start time: {slot_start}, choose end time:", reply_markup=reply_markup)  
+    await update.callback_query.edit_message_text(f"время начала: {slot_start}, выберите время окончания:", reply_markup=reply_markup)  
 
 async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, time_start, time_end) -> None:
     PM.book_spot(room_id, date, time_start, time_end)
-    keyboard = [[InlineKeyboardButton("Back", callback_data="back")]]
+    keyboard = [[InlineKeyboardButton("В начало", callback_data="back")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text(f"You succesfully booked [room name] {time_start} - {time_end} at {date}!", reply_markup=reply_markup)  
+    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату [room name] с {time_start} до {time_end}, {date}!", reply_markup=reply_markup)  
     
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
