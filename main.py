@@ -41,7 +41,7 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [
             [InlineKeyboardButton("Забронировать комнату", callback_data="booking")],
-            [InlineKeyboardButton("Настройки [WIP]", callback_data="options")]
+            [InlineKeyboardButton("Настройки [VIP]", callback_data="options")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
