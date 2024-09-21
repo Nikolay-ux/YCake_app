@@ -68,17 +68,23 @@ class PlaceManager:
 
         # Query to get the occupied slots from the table
         print (date)
-        cursor.execute('SELECT time FROM time WHERE date = ? ORDER BY time', (date,))
+        cursor.execute('SELECT time FROM time WHERE date = ? AND home_id = ? ORDER BY time', (date, spot_id,))
         occupied_slots = [slot[0] for slot in cursor.fetchall()]
-
+        occupied_slots = [slot[:5] for slot in occupied_slots]
+        occupied_slots_time = [datetime.strptime(slot, '%H:%M').time() for slot in occupied_slots]
         # Filter out the occupied slots
-        available_slots = [slot for slot in all_slots if slot not in occupied_slots]
-
+        available_slots = []
+        for slot in all_slots:
+            slot_time = datetime.strptime(slot, '%H:%M').time()
+            if slot_time not in occupied_slots_time:
+                available_slots.append(slot)
         # Print the available slots
         print(available_slots)
 
         # Close the connection
         conn.close()
+        return available_slots
+
        
     
     # Просмотр всех занятых мест на определённую дату
