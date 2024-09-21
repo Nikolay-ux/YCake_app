@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, \
-        ContextTypes, ConversationHandler, MessageHandler, filters
+        ContextTypes, ConversationHandler, MessageHandler, filters, CallbackContext
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -48,12 +48,22 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(f"Добро пожаловать, {username}!")
         await update.message.reply_text("Выберите действие:", reply_markup=reply_markup)
-
+        await update.callback_query.edit_message_text()
         return ConversationHandler.END
     else:
         await update.message.reply_text("Неверное имя пользователя или пароль. Попробуйте снова.")
         return ConversationHandler.END
-    
+
+async def get_user_id(update: Update, context: CallbackContext):
+    user_id = update.message.from_user.id
+    await print(f"Ваш ID: {user_id}")
+
+async def set_user_id(update: Update, context: CallbackContext):
+    user_id = context.user_data.get()
+
+    PM.set_id(user_id)
+    await update.message.reply_text(f"Ваш ID: {user_id}")
+
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Процесс отменен.')
     return ConversationHandler.END
@@ -135,7 +145,7 @@ async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     reply_markup = InlineKeyboardMarkup(keyboard)
     obj = datetime.strptime(date, '%Y-%m-%d')
     await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату {room_name} с {time_start} до {time_end}, {obj.strftime('%d.%m')}!", reply_markup=reply_markup)  
-    
+
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     query = update.callback_query

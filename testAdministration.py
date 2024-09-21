@@ -46,7 +46,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
 
     # Обработчик всех текстовых сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND))
 
     # Запуск бота с опросом
     application.run_polling()
