@@ -129,7 +129,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         date = query.data.split("_")[-1]
         await handle_private_booking_room_date(update, context, room_id, date)
        
-    if query.data.startswith("private_room_"):
+    elif query.data.startswith("private_room_"):
         room_id = query.data.split("_")[-1]        
         await handle_private_booking_room(update, context, room_id)
     
