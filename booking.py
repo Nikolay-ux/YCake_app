@@ -77,19 +77,27 @@ class PlaceManager:
         cursor = conn.cursor()
 
         # SQL-запрос для получения комнат в заданном городе
-        query = """
+        query_name = """
         SELECT room_name
         FROM rooms
         WHERE room_position = ?
         """
-        cursor.execute(query, (city,))
-        results = cursor.fetchall()
+        query_id = """
+        SELECT ID
+        FROM rooms
+        WHERE room_position = ?
+        """
+        cursor.execute(query_name, (city,))
+        result_name = cursor.fetchall()
+        rooms = [row[0] for row in result_name]
+        cursor.execute(query_id, (city,))
+        result_id = cursor.fetchall()
+        ids = [row[0] for row in result_id]
+        result = rooms, ids
+        print(result)
         conn.close()
 
-        # Массив для хранения названий комнат
-        rooms = [row[0] for row in results]
-
-        return rooms
+        return result
 
     
     # Бронирование конкретного места
