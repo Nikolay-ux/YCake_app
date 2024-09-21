@@ -1,16 +1,16 @@
 import logging
+import os
+import sqlite3
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     ApplicationBuilder, 
     CommandHandler, 
-    CallbackQueryHandler, 
     MessageHandler, 
     filters, 
     ContextTypes, 
     ConversationHandler
 )
 from dotenv import load_dotenv
-import os
 
 # Загружаем переменные окружения из .env файла
 load_dotenv()
@@ -24,21 +24,23 @@ logging.basicConfig(
 # Определение этапов в разговоре
 USERNAME, PASSWORD = range(2)
 
-# Массив (или словарь) с валидными пользователями и паролями
-USUAL_USERS = {
-    "user1": "password",
-    "user2": "password"
-}
+# Подключение к базе данных SQLite
+def db_connect():
+    return sqlite3.connect('people.db')
 
-EXTRA_USERS = {
-    "user3": "password",
-    "user4": "password"
-}
+# Функция для проверки пользователя и пароля
+def check_user_in_db(username, password):
+    conn = db_connect()
+    cursor = conn.cursor()
 
-VALID_USERS = {
-    "user5": "password",
-    "user6": "password"
-}
+    # SQL запрос для проверки логина и пароля
+    #query = "SELECT tg_mail AND password FROM tags WHERE tg_mail = ? AND password = ?"
+    cursor.execute('SELECT tg_mail AND password FROM tags WHERE tg_mail = ? AND password = ?', (username, password))
+    result = cursor.fetchone()
+
+    conn.close()
+    
+    return result is not None
 
 # Функция для команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,13 +53,13 @@ async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Введите пароль:")
     return PASSWORD
 
-# Получение пароля и проверка
+# Получение пароля и проверка через базу данных
 async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = context.user_data.get('username')
     password = update.message.text
 
-    # Проверяем имя пользователя и пароль
-    if VALID_USERS.get(username) == password or EXTRA_USERS.get(username) == password or USUAL_USERS.get(username) == password:
+    # Проверка логина и пароля через базу данных
+    if check_user_in_db(username, password):
         # Удаляем предыдущее сообщение
         await update.message.delete()
 
@@ -73,7 +75,6 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please choose:", reply_markup=reply_markup)
 
         return ConversationHandler.END
-    
     else:
         await update.message.reply_text("Неверное имя пользователя или пароль. Попробуйте снова.")
         return ConversationHandler.END
