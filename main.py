@@ -29,7 +29,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 areas = 3
-PlaceManager = booking.PlaceManager()
+PM = booking.PlaceManager()
 
 USERNAME, PASSWORD = range(2)
 
