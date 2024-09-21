@@ -47,6 +47,36 @@ class PlaceManager:
     def num_spots(self):
         return len(self.spots)
     
+    def get_cities():        
+        # Подключение к базе данных
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        # SQL-запрос
+        query = """
+        SELECT room_position, GROUP_CONCAT(room_name) AS rooms
+        FROM rooms
+        GROUP BY room_position;
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        conn.close()
+
+        cities = []
+
+        for row in results:
+            cities.append(row[0])  # Добавляем город в массив
+            print(f"Город: {row[0]}, Комнаты: {row[1]}")
+
+        # Закрытие соединения
+        return cities
+    
+    def get_rooms(city):
+        
+        rooms = []
+        return rooms
+
+    
     # Бронирование конкретного места
     def book_spot(self, spot_id, date, start_time, duration):
         if spot_id < 1 or spot_id > len(self.spots):
