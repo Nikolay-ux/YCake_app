@@ -6,7 +6,7 @@
 ```
  pip3 install python-telegram-bot 
 ```
-### 1. Для работы с sqlite:
+### 2. Для работы с sqlite:
 ```
 pip3 install sqlite3 
 ```
