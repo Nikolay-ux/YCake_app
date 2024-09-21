@@ -128,9 +128,10 @@ async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_T
 
 async def handle_set_booked(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, time_start, time_end) -> None:
     PM.book_spot(room_id, date, time_start, time_end)
+    room_name = PM.get_room_name(room_id)
     keyboard = [[InlineKeyboardButton("В начало", callback_data="back")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату [room name] с {time_start} до {time_end}, {date}!", reply_markup=reply_markup)  
+    await update.callback_query.edit_message_text(f"Вы успешно забронировали комнату {room_name} с {time_start} до {time_end}, {date}!", reply_markup=reply_markup)  
     
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     

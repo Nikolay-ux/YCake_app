@@ -47,6 +47,24 @@ class PlaceManager:
     def num_spots(self):
         return len(self.spots)
     
+    def get_room_name(self, room_id):
+        conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
+        cursor = conn.cursor()
+
+        query = """
+        SELECT room_name
+        FROM rooms
+        WHERE ID = ?
+        """
+        cursor.execute(query, (room_id,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return result[0]
+        else:
+            return None
+    
     def get_cities(self):        
         # Подключение к базе данных
         conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
