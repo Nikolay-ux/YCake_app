@@ -110,7 +110,8 @@ async def handle_book_time(update: Update, context: ContextTypes.DEFAULT_TYPE, r
     keyboard.append([InlineKeyboardButton("В начало", callback_data="back")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.callback_query.edit_message_text(f"{date}   Выберите время начала:", reply_markup=reply_markup)  
+    obj = datetime.strptime(date, '%Y-%m-%d')
+    await update.callback_query.edit_message_text(f"{obj.strftime('%d.%m')}   Выберите время начала:", reply_markup=reply_markup)
     
 async def handle_confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE, room_id, date, slot_start) -> None:
     slots = PM.check_spot_availability(room_id, date)
