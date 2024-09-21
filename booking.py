@@ -69,7 +69,7 @@ class PlaceManager:
         # Закрытие соединения
         return cities
     
-    def get_rooms(city):
+    def get_rooms(self, city):
         # Подключение к базе данных
         conn = sqlite3.connect('1.db')  # Замените на ваше название базы данных
         cursor = conn.cursor()
@@ -92,7 +92,6 @@ class PlaceManager:
         result_id = cursor.fetchall()
         ids = [row[0] for row in result_id]
         result = rooms, ids
-        print(result)
         conn.close()
 
         return result
@@ -120,7 +119,6 @@ class PlaceManager:
         cursor.execute('SELECT time FROM time WHERE date = ? AND home_id = ? ORDER BY time', (date, spot_id,))
 
         # Query to get the occupied slots from the table
-        print (date)
         cursor.execute('SELECT time FROM time WHERE date = ? AND home_id = ? ORDER BY time', (date, spot_id,))
         occupied_slots = [slot[0] for slot in cursor.fetchall()]
         occupied_slots = [slot[:5] for slot in occupied_slots]
@@ -131,8 +129,6 @@ class PlaceManager:
             slot_time = datetime.strptime(slot, '%H.%M').time()
             if slot_time not in occupied_slots_time:
                 available_slots.append(slot)
-        # Print the available slots
-        print(available_slots)
 
         # Close the connection
         conn.close()
