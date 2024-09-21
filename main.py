@@ -190,6 +190,8 @@ def main() -> None:
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
+    application.add_handler(CallbackQueryHandler(buttons))
+
     # Добавляем ConversationHandler для обработки ввода имени и пароля
     application.add_handler(conv_handler)
 
