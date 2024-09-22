@@ -16,6 +16,6 @@ python3 main.py
 ## После перейти по ссылке на бота, полученной от [@botfather](https://t.me/botfather)
 ### Имя пользователя и пароль:
 ```
-@ggwp
+@tony_i9
 pass
 ```
